@@ -24,11 +24,12 @@ import com.liskovsoft.smartyoutubetv.misc.KeysTranslator;
 import com.liskovsoft.smartyoutubetv.misc.LangUpdater;
 import com.liskovsoft.smartyoutubetv.misc.UAManager;
 import edu.mit.mobile.android.appupdater.addons.PermissionManager;
+import android.annotation.SuppressLint;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class SmartYouTubeTVActivityBase extends MainBrowserActivity {
+public abstract class SmartYouTubeTVActivityBase extends MainBrowserActivity {
     private static final String TAG = SmartYouTubeTVActivityBase.class.getSimpleName();
     private Controller mController;
     private String mServiceUrl; // youtube url here
@@ -171,6 +172,7 @@ public class SmartYouTubeTVActivityBase extends MainBrowserActivity {
         super.onBackPressed();
     }
 
+    @SuppressLint("WrongConstant")
     private void returnToLaunchersDialog() {
         Intent intent = new Intent();
         intent.setClass(this, BootstrapActivity.class);

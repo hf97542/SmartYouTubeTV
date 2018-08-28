@@ -2,7 +2,7 @@ package com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser
 
 import android.net.Uri;
 import com.liskovsoft.browser.Browser;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.mpdbuilder.MyMPDParser;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.mpdbuilder.SimpleMPDParser;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.events.DecipherOnlySignaturesDoneEvent;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.events.DecipherOnlySignaturesEvent;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.misc.SimpleYouTubeGenericInfo;
@@ -123,6 +123,7 @@ public class YouTubeMediaParser {
     private InputStream extractDashMPDContent() {
         String dashmpdUrl = mDashMPDUrl.toString();
         if (dashmpdUrl != null) {
+            // TODO: handle 403 (Auth error)
             Response response = OkHttpHelpers.doOkHttpRequest(dashmpdUrl);
             return response == null ? null : response.body().byteStream();
         }
@@ -155,9 +156,10 @@ public class YouTubeMediaParser {
         }
         Browser.getBus().unregister(this);
 
-        if (mMediaItems.size() == 0) {
-            mListener.onExtractMediaItemsAndDecipher(mMediaItems);
-        }
+        // TODO: investigate purpose of code below
+        //if (mMediaItems.size() == 0) {
+        //    mListener.onExtractMediaItemsAndDecipher(mMediaItems);
+        //}
 
         List<String> signatures = doneEvent.getSignatures();
         String lastSignature = signatures.get(signatures.size() - 1);
@@ -182,7 +184,7 @@ public class YouTubeMediaParser {
         mDashMPDUrl.setParam(MediaItem.SIGNATURE, signature);
 
         InputStream inputStream = extractDashMPDContent();
-        MyMPDParser parser = new MyMPDParser(inputStream);
+        SimpleMPDParser parser = new SimpleMPDParser(inputStream);
         mNewMediaItems = parser.parse();
     }
 
@@ -295,6 +297,10 @@ public class YouTubeMediaParser {
         String getSignature();
         void setAudioSamplingRate(String audioSamplingRate);
         String getAudioSamplingRate();
+        void setSourceURL(String sourceURL);
+        String getSourceURL();
+        List<String> getSegmentUrlList();
+        void setSegmentUrlList(List<String> urls);
     }
 
     public interface GenericInfo {

@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.core.CrashlyticsCore;
 import com.liskovsoft.smartyoutubetv.BuildConfig;
 import com.liskovsoft.smartyoutubetv.R;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.SmartYouTubeTVExoWebView;
@@ -52,13 +51,6 @@ public class BootstrapActivity extends ActivityBase {
         }
     }
 
-    private void initButtons() {
-        initCheckbox(R.id.chk_save_selection, mPrefs.getBootstrapSaveSelection());
-        initCheckbox(R.id.chk_autoframerate, mPrefs.getBootstrapAutoframerate());
-        initCheckbox(R.id.chk_old_ui, mPrefs.getBootstrapOldUI());
-        initCheckbox(R.id.chk_update_check, mPrefs.getBootstrapUpdateCheck());
-    }
-
     private void initCheckbox(int id, boolean isChecked) {
         BootstrapCheckBox chkbox = (BootstrapCheckBox) findViewById(id);
         chkbox.setChecked(isChecked);
@@ -77,9 +69,17 @@ public class BootstrapActivity extends ActivityBase {
                 Toast.makeText(this, "Dummy crash report message", Toast.LENGTH_LONG).show();
                 break;
             case R.id.btn_preferred_codec:
-                BootstrapSelectorDialog.create(this, new CodecDataSource(this));
+                GenericSelectorDialog.create(this, new CodecDataSource(this));
                 break;
         }
+    }
+
+    private void initButtons() {
+        initCheckbox(R.id.chk_save_selection, mPrefs.getBootstrapSaveSelection());
+        initCheckbox(R.id.chk_autoframerate, mPrefs.getBootstrapAutoframerate());
+        initCheckbox(R.id.chk_old_ui, mPrefs.getBootstrapOldUI());
+        initCheckbox(R.id.chk_update_check, mPrefs.getBootstrapUpdateCheck());
+        initCheckbox(R.id.chk_endcards, mPrefs.getEnableEndCards());
     }
 
     public void onCheckedChanged(BootstrapCheckBox checkBox, boolean b) {
@@ -95,6 +95,9 @@ public class BootstrapActivity extends ActivityBase {
                 break;
             case R.id.chk_old_ui:
                 mPrefs.setBootstrapOldUI(b);
+                break;
+            case R.id.chk_endcards:
+                mPrefs.setEndCards(b);
                 break;
         }
     }

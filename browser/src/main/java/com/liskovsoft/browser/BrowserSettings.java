@@ -195,7 +195,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener, Prefer
 
     public int getInitialScale() {
         // real display size (virtual pixel == real pixel)
-        // 100 - normal resolution, 50 - 2160p resolution
+        // 100 - native resolution, 50 - 2160p resolution, 0 - default
         return mPrefs.getInt(PREF_INITIAL_SCALE, 100);
     }
 

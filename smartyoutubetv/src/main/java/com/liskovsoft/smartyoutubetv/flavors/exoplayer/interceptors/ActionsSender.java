@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build.VERSION;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.Toast;
 import com.liskovsoft.browser.Browser;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.SmartYouTubeTVExoXWalk;
@@ -23,6 +24,7 @@ import java.util.Map;
  * Pull actions from {@link PlayerActivity} and sends them back to the WebView
  */
 public class ActionsSender {
+    private static final String TAG = ActionsSender.class.getSimpleName();
     private final Context mContext;
     private final ExoInterceptor mInterceptor;
     private final String[] mPlayerButtons = {
@@ -48,7 +50,8 @@ public class ActionsSender {
      */
     public void bindActions(Intent intent) {
         if (intent == null) {
-            throw new IllegalStateException("Activity result cannot be null");
+            Log.w(TAG, "ActionsSender: activity result cannot be null");
+            return;
         }
 
         applyAutoframerate(intent);
@@ -60,6 +63,12 @@ public class ActionsSender {
     private Map<String, Boolean> extractButtonStates(Intent intent) {
         Map<String, Boolean> result = new HashMap<>();
         for (String buttonId : mPlayerButtons) {
+            // bypass buttons that not changed at all
+            // details: http://4pda.ru/forum/index.php?act=qms&mid=1536707&t=4948881
+            if (!intent.hasExtra(buttonId)) {
+                continue;
+            }
+
             boolean isChecked = intent.getBooleanExtra(buttonId, false);
             result.put(buttonId, isChecked);
         }
@@ -89,7 +98,9 @@ public class ActionsSender {
             return;
         }
         // replace track_ended with button_next
-        if (buttons.get(PlayerActivity.TRACK_ENDED)) {
+        Boolean isEnded = buttons.get(PlayerActivity.TRACK_ENDED);
+        isEnded = isEnded == null ? false : isEnded; // fix NPE
+        if (isEnded) {
             buttons.put(PlayerActivity.TRACK_ENDED, false);
             buttons.put(PlayerActivity.BUTTON_NEXT, true);
         }

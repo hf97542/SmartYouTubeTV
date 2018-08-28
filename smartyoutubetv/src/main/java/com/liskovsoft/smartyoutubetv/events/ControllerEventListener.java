@@ -1,7 +1,6 @@
 package com.liskovsoft.smartyoutubetv.events;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,14 +14,16 @@ import com.liskovsoft.browser.Controller;
 import com.liskovsoft.browser.Tab;
 import com.liskovsoft.smartyoutubetv.R;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.injectors.DecipherSimpleRoutineInjector;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.injectors.GenericEventResourceInjector;
 import com.liskovsoft.smartyoutubetv.injectors.MyJsCssTweaksInjector;
 import com.liskovsoft.smartyoutubetv.injectors.MyWebViewClientDecorator;
 import com.liskovsoft.smartyoutubetv.injectors.WebViewJavaScriptInterface;
 import com.liskovsoft.smartyoutubetv.misc.KeysTranslator;
 import com.liskovsoft.smartyoutubetv.misc.MainApkUpdater;
+import com.liskovsoft.smartyoutubetv.misc.MyCookieSaver;
 import com.liskovsoft.smartyoutubetv.misc.StateUpdater;
 import com.liskovsoft.smartyoutubetv.oldyoutubeinfoparser.VideoFormatInjector;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.injectors.GenericEventResourceInjector;
+import edu.mit.mobile.android.appupdater.helpers.MyCookieLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +70,11 @@ public class ControllerEventListener implements Controller.EventListener {
     public void onPageFinished(Tab tab) {
         WebView w = tab.getWebView();
         injectWebFiles(w);
+        syncCookies(tab);
+    }
+
+    private void syncCookies(Tab tab) {
+        MyCookieSaver.saveCookie(tab.getWebView());
     }
 
     @Override

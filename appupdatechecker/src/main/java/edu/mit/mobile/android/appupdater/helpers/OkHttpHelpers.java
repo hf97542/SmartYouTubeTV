@@ -1,23 +1,27 @@
 package edu.mit.mobile.android.appupdater.helpers;
 
+import android.content.Context;
 import android.util.Log;
-import edu.mit.mobile.android.appupdater.downloadmanager.GoogleResolver;
-import okhttp3.Dns;
+import okhttp3.Cookie;
+import okhttp3.CookieJar;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class OkHttpHelpers {
-    private static final int NUM_TRIES = 5;
+    private static final int NUM_TRIES = 10;
     private static final long CONNECT_TIMEOUT_S = 20;
     private static final String TAG = OkHttpHelpers.class.getSimpleName();
     private static OkHttpClient mClient;
+    private static Context sContext;
+
+    public static void setContext(Context ctx) {
+        sContext = ctx;
+    }
 
     public static Response doOkHttpRequest(String url) {
         if (mClient == null)
@@ -28,28 +32,40 @@ public class OkHttpHelpers {
                 .build();
 
         Response okHttpResponse = null;
+        Exception lastEx = null;
         for (int tries = NUM_TRIES; tries > 0; tries--) {
             try {
                 okHttpResponse = mClient.newCall(okHttpRequest).execute();
-                if (!okHttpResponse.isSuccessful()) throw new IllegalStateException("Unexpected code " + okHttpResponse);
+                if (!okHttpResponse.isSuccessful()) {
+                    throw new IllegalStateException("Unexpected code " + okHttpResponse);
+                }
 
                 break; // no exception is thrown - job is done
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Log.e(TAG, ex.getMessage(), ex); // network error, just return null
+                okHttpResponse = null;
+                lastEx = ex;
             }
+        }
+
+        if (lastEx != null) {
+            Helpers.showLongMessage(sContext, TAG, lastEx.getMessage());
         }
 
         return okHttpResponse;
     }
 
     private static OkHttpClient createOkHttpClient() {
-        final GoogleResolver resolver = new GoogleResolver();
         return new OkHttpClient.Builder()
-                .dns(new Dns() {
+                .cookieJar(new CookieJar() {
                     @Override
-                    public List<InetAddress> lookup(String hostname) throws UnknownHostException {
-                        List<InetAddress> hosts = resolver.resolve(hostname);
-                        return hosts.isEmpty() ? Dns.SYSTEM.lookup(hostname) : hosts; // use system dns as a fallback
+                    public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+                        
+                    }
+
+                    @Override
+                    public List<Cookie> loadForRequest(HttpUrl url) {
+                        return MyCookieLoader.loadCookie(url);
                     }
                 })
                 .connectTimeout(CONNECT_TIMEOUT_S, TimeUnit.SECONDS)

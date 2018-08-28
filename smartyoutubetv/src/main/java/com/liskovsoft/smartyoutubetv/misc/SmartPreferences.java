@@ -13,6 +13,8 @@ public final class SmartPreferences {
     private static final String BOOTSTRAP_SELECTED_LANGUAGE = "bootstrapSelectedLanguage";
     private static final String BOOTSTRAP_UPDATE_CHECKED = "bootstrapUpdateChecked";
     private static final String BOOTSTRAP_OLD_UI_CHECKED = "bootstrapOldUIChecked";
+    private static final String COOKIE_MANAGER_COOKIE = "cookieManagerCookie";
+    private static final String BOOTSTRAP_ENDCARDS = "bootstrapEndCards";
     private static SmartPreferences sInstance;
     private Context mContext;
     private SharedPreferences mPrefs;
@@ -36,7 +38,7 @@ public final class SmartPreferences {
     }
 
     public VideoFormat getSelectedFormat() {
-        String name = mPrefs.getString(VIDEO_FORMAT_NAME, "720p");
+        String name = mPrefs.getString(VIDEO_FORMAT_NAME, "Auto");
         return VideoFormat.fromName(name);
     }
 
@@ -108,5 +110,26 @@ public final class SmartPreferences {
         mPrefs.edit()
                 .putBoolean(BOOTSTRAP_OLD_UI_CHECKED, isChecked)
                 .apply();
+    }
+
+    public void setCookie(String cookie) {
+        mPrefs.edit()
+                .putString(COOKIE_MANAGER_COOKIE, cookie)
+                .apply();
+    }
+
+    public String getCookie() {
+        String cookie = mPrefs.getString(COOKIE_MANAGER_COOKIE, "");
+        return cookie;
+    }
+
+    public void setEndCards(boolean isChecked) {
+        mPrefs.edit()
+                .putBoolean(BOOTSTRAP_ENDCARDS, isChecked)
+                .apply();
+    }
+
+    public boolean getEnableEndCards() {
+        return mPrefs.getBoolean(BOOTSTRAP_ENDCARDS, true);
     }
 }
