@@ -3,15 +3,13 @@ package com.liskovsoft.smartyoutubetv.flavors.exoplayer.kodi;
 import android.content.Context;
 import android.net.Uri;
 import android.webkit.WebResourceResponse;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.commands.GenericCommand;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.interceptors.DelayedCommandCallInterceptor;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.OnMediaFoundCallback;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.SimpleYouTubeInfoParser;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.YouTubeInfoParser;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.YouTubeMediaParser.GenericInfo;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.toplevel.OnMediaFoundCallback;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.toplevel.SimpleYouTubeInfoParser;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.toplevel.YouTubeInfoParser;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.toplevel.YouTubeMediaParser.GenericInfo;
 import com.liskovsoft.smartyoutubetv.interceptors.RequestInterceptor;
 import com.liskovsoft.smartyoutubetv.misc.MyUrlEncodedQueryString;
-import edu.mit.mobile.android.appupdater.helpers.OkHttpHelpers;
+import com.liskovsoft.smartyoutubetv.common.okhttp.OkHttpHelpers;
 import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,19 +56,30 @@ public abstract class MPDExtractInterceptor extends RequestInterceptor {
     private void parseAndOpenExoPlayer() {
         final YouTubeInfoParser dataParser = new SimpleYouTubeInfoParser(mResponseStream60Fps, mResponseStream30Fps);
         dataParser.parse(new OnMediaFoundCallback() {
+            private Uri mHlsUrl;
+            private InputStream mMpdContent;
             private GenericInfo mInfo;
             @Override
             public void onDashMPDFound(final InputStream mpdContent) {
-                MPDExtractInterceptor.this.onDashMPDFound(mpdContent);
+                mMpdContent = mpdContent;
             }
             @Override
             public void onLiveUrlFound(final Uri hlsUrl) {
-                MPDExtractInterceptor.this.onLiveUrlFound(hlsUrl);
+                mHlsUrl = hlsUrl;
             }
 
             @Override
             public void onInfoFound(GenericInfo info) {
                 mInfo = info;
+            }
+
+            @Override
+            public void onDone() {
+                if (mMpdContent != null) {
+                    MPDExtractInterceptor.this.onDashMPDFound(mMpdContent);
+                } else if (mHlsUrl != null) {
+                    MPDExtractInterceptor.this.onLiveUrlFound(mHlsUrl);
+                }
             }
         });
     }

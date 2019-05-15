@@ -3,10 +3,10 @@
 
 [![MPLv2 License](http://img.shields.io/badge/license-MPLv2-blue.svg?style=flat-square)](https://www.mozilla.org/MPL/2.0/)
 
-__SmartYouTubeTV: An YouTube client for set-top boxes and Android-based TVs:__
+__SmartYouTubeTV: A YouTube client for set-top boxes and Android-based TVs:__
 
-Visit discussion on the official page: 
- * <a href="https://smartyoutubetv.github.io/#comment-3432484129" target="_blank">[APP] SmartYouTubeTV</a>
+ * <a href="https://t.me/SmartYouTubeTV">Telegram group</a>
+ * <a href="https://smartyoutubetv.github.io/#comment-3432484129" target="_blank">Visit discussion on the official page</a>
 
 ### Features:
 
@@ -42,17 +42,24 @@ __How to change system language with only the MiTV3__
 ### Starting screen:
 
 The device/resolution options at start launches different playing methods (as per https://github.com/yuliskov/SmartYouTubeTV/issues/15#issuecomment-364805950)
-* 720 - original / core player
-* 1080 - XWalk
-* 4K - Exoplayer
-* 4K Alt - Exoplayer with fixes
+* 1080 Main - WebView
+* 1080 Alt  - XWalk
+* 4K Main   - Exoplayer + WebView
+* 4K Alt    - Exoplayer + XWalk
 
 Also important, it's possible to select max resolution and codec (ie 1080/AVC1) via the start screen that will be applied on video loading (**Codec** option).
 
 The **Remember** tick box acts as a configuration saving for next app launches.
+
+### Donation:
+If you want to support my developments you are welcome to buy me a cup of coffee :)
+ * [__Donation Alerts (RU, PayPal)__](https://www.donationalerts.ru/r/firsthash)
+ * [__PrivatBank (UA)__](https://privatbank.ua/ru/sendmoney?payment=5fcdddf53e3d491d63fcb050e6e2e05f2f2678c2)
+ * __BTC__: 1JAT5VVWarVBkpVbNDn8UA8HXNdrukuBSx
  
 ### Reviews / Articles:
- * Just google for "Smart YouTube TV"
+ * [__Official site__](https://smartyoutubetv.github.io)
+ * [__XDA thread__](https://forum.xda-developers.com/fire-tv/themes-apps/modified-version-smart-youtube-tv-t3773384)
  
 ### Changelog:
  * [Check releases page for changelog ..](https://github.com/yuliskov/SmartYouTubeTV/releases)
@@ -63,14 +70,9 @@ The **Remember** tick box acts as a configuration saving for next app launches.
  * __[TheRMaverick](https://github.com/TheRMaverick)__ (German language)
  * __[Maikell84](https://github.com/Maikell84)__ (misc fixes)
 
-### Donation:
-If you want to support my developments you are welcome to buy me a cup of coffee :)
- * BTC: 1JAT5VVWarVBkpVbNDn8UA8HXNdrukuBSx
- * WMZ: Z375157140784
- * WMU: U449339012933
-
 ### Screens:
 ![Screenshot of SmartYouTubeTV](screenshots/smartyoutubetv_screenshot_01.jpg "Screenshot of SmartYouTubeTV")
 ![Screenshot of SmartYouTubeTV](screenshots/smartyoutubetv_screenshot_02.jpg "Screenshot of SmartYouTubeTV")
+![Screenshot of SmartYouTubeTV](screenshots/smartyoutubetv_screenshot_03.jpg "Screenshot of SmartYouTubeTV")
 ![Screenshot of SmartYouTubeTV](screenshots/smartyoutubetv_screenshot_04.jpg "Screenshot of SmartYouTubeTV")
 ![Screenshot of SmartYouTubeTV](screenshots/smartyoutubetv_screenshot_05.jpg "Screenshot of SmartYouTubeTV")

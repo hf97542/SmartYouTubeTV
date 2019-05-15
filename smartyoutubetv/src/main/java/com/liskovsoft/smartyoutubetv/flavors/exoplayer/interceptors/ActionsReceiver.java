@@ -4,12 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.commands.GenericCommand;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.commands.GetButtonStatesCommand;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.commands.GetDateCommand;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.PlayerActivity;
 
 import java.lang.reflect.Type;
@@ -23,16 +21,19 @@ public class ActionsReceiver implements Runnable {
     private static final long RESPONSE_CHECK_DELAY_MS = 3000;
     private final Context mContext;
     private final Intent mIntent;
-    private final Runnable mOnDone;
+    private final Listener mListener;
     private boolean mRunOnce = false;
-    private int mRunCount;
     private GenericCommand mStateCommand;
-    private GenericCommand mDateCommand;
 
-    public ActionsReceiver(Context context, Intent intent, Runnable onDone) {
+    interface Listener {
+        void onDone();
+        void onCancel();
+    }
+
+    public ActionsReceiver(Context context, Intent intent, Listener listener) {
         mContext = context;
         mIntent = intent;
-        mOnDone = onDone;
+        mListener = listener;
     }
 
     /**
@@ -40,41 +41,36 @@ public class ActionsReceiver implements Runnable {
      * @return true if user didn't tapped back key
      */
     private boolean checkIntent() {
-        if (runOnce()) {
-            return false;
-        }
-
         if (mIntent.hasExtra(PlayerActivity.BUTTON_SUBSCRIBE) ||
             mIntent.hasExtra(PlayerActivity.BUTTON_NEXT))
             return true;
 
         Log.w(TAG, "Action is cancelled. User tapped back key. Disable subsequent start of the player activity... ");
         // Uncomment next section to debug
-        // Toast.makeText(mContext, "Action is cancelled. Do nothing...", Toast.LENGTH_LONG).show();
         return false;
-    }
-
-    private void processDate(String result) {
-        mIntent.putExtra(PlayerActivity.VIDEO_DATE, result);
     }
 
     /**
      * Button states in JSON format
      */
     private void processJSON(String result) {
-        Map<String, Boolean> states = convertToObj(result);
+        Map<String, Object> states = convertToObj(result);
         syncWithIntent(states);
     }
 
-    private void syncWithIntent(Map<String, Boolean> states) {
-        for (Map.Entry<String, Boolean> entry : states.entrySet()) {
-            mIntent.putExtra(entry.getKey(), entry.getValue());
+    private void syncWithIntent(Map<String, Object> states) {
+        for (Map.Entry<String, Object> entry : states.entrySet()) {
+            Object val = entry.getValue();
+            if (val instanceof Boolean || val == null)
+                mIntent.putExtra(entry.getKey(), (Boolean) val);
+            if (val instanceof String  || val == null)
+                mIntent.putExtra(entry.getKey(), (String) val);
         }
     }
 
     // "{'.btn-selector': true, '.btn-selector2': false}"
-    private Map<String, Boolean> convertToObj(String result) {
-        Type type = new TypeToken<Map<String, Boolean>>(){}.getType();
+    private Map<String, Object> convertToObj(String result) {
+        Type type = new TypeToken<Map<String, Object>>(){}.getType();
         Gson gson = new Gson();
         return gson.fromJson(result, type);
     }
@@ -84,31 +80,30 @@ public class ActionsReceiver implements Runnable {
         mStateCommand = new GetButtonStatesCommand(new GetButtonStatesCommand.Callback() {
             @Override
             public void onResult(String result) {
-                mRunCount++;
                 processJSON(result);
                 doneResult();
+
+                Log.d(TAG, "GetButtonStatesCommand: result");
             }
         });
-        mDateCommand = new GetDateCommand(new GetDateCommand.Callback() {
-            @Override
-            public void onResult(String result) {
-                mRunCount++;
-                processDate(result);
-                doneResult();
-            }
-        });
+
+        Log.d(TAG, "Before GetButtonStatesCommand");
         mStateCommand.call();
-        mDateCommand.call();
 
         startResponseCheck();
     }
 
     /**
-     * Cancel callback if result contains wrong values (player is closed)
+     * Cancel callback if result contains wrong values (e.g. when player is closed)
      */
     private void doneResult() {
-        if (mRunCount == 2 && checkIntent()) {
-            mOnDone.run();
+        if (runOnce()) // don't run this method if startResponseCheck() already executed
+            return;
+
+        if (checkIntent()) {
+            mListener.onDone();
+        } else {
+            mListener.onCancel();
         }
     }
 
@@ -120,8 +115,10 @@ public class ActionsReceiver implements Runnable {
         new Handler(mContext.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!runOnce())
-                    mOnDone.run();
+                if (runOnce()) // don't run this method if doneResult() already executed
+                    return;
+
+                mListener.onDone();
             }
         }, RESPONSE_CHECK_DELAY_MS);
     }

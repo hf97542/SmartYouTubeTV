@@ -2,14 +2,12 @@ package com.liskovsoft.browser;
 
 import android.app.Application;
 import android.content.res.AssetManager;
-import android.os.StrictMode;
 import android.webkit.CookieSyncManager;
 import com.squareup.otto.Bus;
 import com.squareup.otto.ThreadEnforcer;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Properties;
 
 public class Browser extends Application {
@@ -22,6 +20,7 @@ public class Browser extends Application {
     // TODO: do something constant values might be wrong
     final static String EXTRA_SHARE_FAVICON = "share_favicon";
     final static String EXTRA_SHARE_SCREENSHOT = "share_screenshot";
+    public static boolean activityRestored;
 
     private static Bus sBus;
     private static Properties sProperties;
@@ -33,13 +32,6 @@ public class Browser extends Application {
         // create CookieSyncManager with current Context
         CookieSyncManager.createInstance(this);
         BrowserSettings.initialize(getApplicationContext());
-        //Preloader.initialize(getApplicationContext());
-
-        // Leave empty, Play Market use built in exception handling mechanism.
-        // Don't uncomment. Already used Crashlytics in parent app.
-        // Setup handler for uncaught exceptions.
-        //mHandler = new SimpleUncaughtExceptionHandler(getApplicationContext());
-        //Thread.setDefaultUncaughtExceptionHandler(mHandler);
 
         initProperties();
     }
@@ -85,8 +77,5 @@ public class Browser extends Application {
         }
         return sProperties.getProperty(key);
     }
-
-    private UncaughtExceptionHandler mHandler;
-
 }
 

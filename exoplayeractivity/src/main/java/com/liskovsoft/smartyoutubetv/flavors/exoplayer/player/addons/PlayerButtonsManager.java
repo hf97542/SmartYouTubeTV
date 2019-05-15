@@ -3,18 +3,16 @@ package com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.addons;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.Toast;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.util.Util;
 import com.liskovsoft.exoplayeractivity.R;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.ExoPreferences;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.PlayerActivity;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.dialogs.GenericSelectorDialog;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.dialogs.SpeedDataSource;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.helpers.PlayerUtil;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.widgets.ToggleButtonBase;
 
 import java.util.HashMap;
@@ -45,22 +43,29 @@ public class PlayerButtonsManager {
 
     private void initWebButtons() {
         Intent intent = mPlayerActivity.getIntent();
+        Bundle extras = intent.getExtras();
+        if (extras == null) {
+            return;
+        }
         for (Map.Entry<Integer, String> entry : mIdTagMapping.entrySet()) {
-            boolean isButtonDisabled = !intent.getExtras().containsKey(entry.getValue());
-            if (isButtonDisabled) {
+            boolean isButtonDisabled = !extras.containsKey(entry.getValue());
+            // NOTE: fix phantom subscribe/unsubscribe
+            boolean isSubscribeButton = entry.getValue().equals(PlayerActivity.BUTTON_SUBSCRIBE);
+            if (isButtonDisabled && isSubscribeButton) {
                 Integer btnId = entry.getKey();
-                ToggleButtonBase btn = (ToggleButtonBase) mPlayerActivity.findViewById(btnId);
+                ToggleButtonBase btn = mPlayerActivity.findViewById(btnId);
                 // NOTE: if no such state then mark button as disabled
                 btn.disable();
                 continue;
             }
+
             boolean isChecked = intent.getBooleanExtra(entry.getValue(), false);
             Integer btnId = entry.getKey();
             if (excludeButton(btnId)) {
                 continue;
             }
 
-            ToggleButtonBase btn = (ToggleButtonBase) mPlayerActivity.findViewById(btnId);
+            ToggleButtonBase btn = mPlayerActivity.findViewById(btnId);
             btn.setChecked(isChecked);
         }
     }
@@ -87,7 +92,7 @@ public class PlayerButtonsManager {
         mIdTagMapping.put(R.id.exo_dislike, PlayerActivity.BUTTON_DISLIKE);
         mIdTagMapping.put(R.id.exo_subscribe, PlayerActivity.BUTTON_SUBSCRIBE);
         mIdTagMapping.put(R.id.exo_prev, PlayerActivity.BUTTON_PREV);
-        mIdTagMapping.put(R.id.exo_next, PlayerActivity.BUTTON_NEXT);
+        mIdTagMapping.put(R.id.exo_next2, PlayerActivity.BUTTON_NEXT);
         mIdTagMapping.put(R.id.exo_suggestions, PlayerActivity.BUTTON_SUGGESTIONS);
     }
 
@@ -98,12 +103,13 @@ public class PlayerButtonsManager {
 
         boolean isUserPageButton = id == R.id.exo_user && isChecked;
         boolean isSubtitleButton = id == R.id.exo_captions;
-        boolean isNextButton = id == R.id.exo_next && isChecked;
+        boolean isNextButton = id == R.id.exo_next2 && isChecked;
         boolean isPrevButton = id == R.id.exo_prev && isChecked;
         boolean isSuggestions = id == R.id.exo_suggestions && isChecked;
         boolean isShareButton = id == R.id.exo_share;
         boolean isRepeatButton = id == R.id.exo_repeat;
         boolean isSpeedButton = id == R.id.exo_speed;
+        boolean isBackButton = id == R.id.exo_back;
 
         if (isSpeedButton) {
             mPlayerActivity.onSpeedClicked();
@@ -132,23 +138,39 @@ public class PlayerButtonsManager {
             isSuggestions) {
             mPlayerActivity.doGracefulExit();
         }
+
+        if (isBackButton) {
+            mPlayerActivity.doGracefulExit(PlayerActivity.BUTTON_BACK);
+        }
     }
 
     @TargetApi(17)
     private void displayShareDialog() {
+        String videoId = mPlayerActivity.getIntent().getStringExtra(PlayerActivity.VIDEO_ID);
+        Uri videoUrl = PlayerUtil.convertToFullUrl(videoId);
+        PlayerUtil.showMultiChooser(mPlayerActivity, videoUrl);
+    }
+
+    @TargetApi(17)
+    private void displayShareDialog2() {
+        Intent openIntent = new Intent();
+        openIntent.setAction(Intent.ACTION_VIEW);
+        String videoId = mPlayerActivity.getIntent().getStringExtra(PlayerActivity.VIDEO_ID);
+        Uri videoUrl = PlayerUtil.convertToFullUrl(videoId);
+        openIntent.setData(videoUrl);
+        mPlayerActivity.startActivity(openIntent);
+    }
+
+    @TargetApi(17)
+    private void displayShareDialogOld() {
         Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         String videoId = mPlayerActivity.getIntent().getStringExtra(PlayerActivity.VIDEO_ID);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, convertToUri(videoId).toString());
+        sendIntent.putExtra(Intent.EXTRA_TEXT, PlayerUtil.convertToFullUrl(videoId).toString());
         sendIntent.setType("text/plain");
         Intent chooserIntent = Intent.createChooser(sendIntent, mPlayerActivity.getResources().getText(R.string.send_to));
         chooserIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         mPlayerActivity.startActivity(chooserIntent);
-    }
-
-    private Uri convertToUri(String videoId) {
-        String url = String.format("https://www.youtube.com/watch?v=%s", videoId);
-        return Uri.parse(url);
     }
 
     public Intent createResultIntent() {
@@ -183,7 +205,7 @@ public class PlayerButtonsManager {
 
     // NOTE: example of visibility change listener
     private void initNextButton() {
-        final View nextButton = mExoPlayerView.findViewById(R.id.exo_next);
+        final View nextButton = mExoPlayerView.findViewById(R.id.exo_next2);
         nextButton.getViewTreeObserver().addOnGlobalLayoutListener(obtainSetButtonEnabledListener(nextButton));
     }
 

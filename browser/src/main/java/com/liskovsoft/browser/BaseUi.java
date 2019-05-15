@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.*;
 import android.webkit.WebChromeClient.CustomViewCallback;
 import android.webkit.WebView;
@@ -16,6 +17,7 @@ import com.liskovsoft.browser.addons.xwalk.XWalkWebViewAdapter;
 import java.util.List;
 
 public abstract class BaseUi implements UI {
+    private static final String TAG = BaseUi.class.getSimpleName();
     protected final Activity mActivity;
     protected final UiController mUiController;
     protected FrameLayout mFullscreenContainer;
@@ -360,6 +362,9 @@ public abstract class BaseUi implements UI {
                 (FrameLayout) container.findViewById(R.id.webview_wrapper);
         wrapper.removeView(mainView);
         mContentView.removeView(container);
+
+        // TODO: Tab could be detached or removed. Is this the same thing?
+        tab.setListener(null);
     }
 
     @Override

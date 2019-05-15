@@ -12,16 +12,17 @@ import com.liskovsoft.smartyoutubetv.BuildConfig;
 import com.liskovsoft.smartyoutubetv.R;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.SmartYouTubeTVExoWebView;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.SmartYouTubeTVExoXWalk;
-import com.liskovsoft.smartyoutubetv.misc.LangUpdater;
-import com.liskovsoft.smartyoutubetv.misc.SmartPreferences;
-import com.liskovsoft.smartyoutubetv.widgets.BootstrapCheckBox;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.dialogs.RestrictCodecDataSource;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.dialogs.GenericSelectorDialog;
+import com.liskovsoft.smartyoutubetv.common.helpers.LangUpdater;
+import com.liskovsoft.smartyoutubetv.common.prefs.SmartPreferences;
+import com.liskovsoft.smartyoutubetv.widgets.BootstrapCheckButton;
 import io.fabric.sdk.android.Fabric;
 
 public class BootstrapActivity extends ActivityBase {
     public static final String FROM_BOOTSTRAP = "FROM_BOOTSTRAP";
     public static final String SKIP_RESTORE = "skip_restore";
     private SmartPreferences mPrefs;
-    private LanguageSelectorDialog mLangSelector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,24 +53,20 @@ public class BootstrapActivity extends ActivityBase {
     }
 
     private void initCheckbox(int id, boolean isChecked) {
-        BootstrapCheckBox chkbox = (BootstrapCheckBox) findViewById(id);
+        BootstrapCheckButton chkbox = findViewById(id);
         chkbox.setChecked(isChecked);
     }
 
     public void onClick(View button) {
-        if (mLangSelector == null) {
-            mLangSelector = new LanguageSelectorDialog(this);
-        }
-
         switch (button.getId()) {
             case R.id.btn_select_lang:
-                mLangSelector.run();
+                GenericSelectorDialog.create(this, new LanguageDataSource(this));
                 break;
             case R.id.btn_send_crash_report:
                 Toast.makeText(this, "Dummy crash report message", Toast.LENGTH_LONG).show();
                 break;
             case R.id.btn_preferred_codec:
-                GenericSelectorDialog.create(this, new CodecDataSource(this));
+                GenericSelectorDialog.create(this, new RestrictCodecDataSource(this));
                 break;
         }
     }
@@ -82,7 +79,7 @@ public class BootstrapActivity extends ActivityBase {
         initCheckbox(R.id.chk_endcards, mPrefs.getEnableEndCards());
     }
 
-    public void onCheckedChanged(BootstrapCheckBox checkBox, boolean b) {
+    public void onCheckedChanged(BootstrapCheckButton checkBox, boolean b) {
         switch (checkBox.getId()) {
             case R.id.chk_save_selection:
                 mPrefs.setBootstrapSaveSelection(b);

@@ -3,13 +3,12 @@ package com.liskovsoft.smartyoutubetv.oldyoutubeinfoparser;
 import android.content.Context;
 import android.webkit.WebResourceResponse;
 import com.liskovsoft.browser.Browser;
-import com.liskovsoft.smartyoutubetv.misc.Helpers;
-import com.liskovsoft.smartyoutubetv.misc.SmartPreferences;
+import com.liskovsoft.smartyoutubetv.common.prefs.SmartPreferences;
 import com.liskovsoft.smartyoutubetv.oldyoutubeinfoparser.events.SwitchResolutionEvent;
 import com.liskovsoft.smartyoutubetv.oldyoutubeinfoparser.events.VideoFormatEvent;
 import com.liskovsoft.smartyoutubetv.interceptors.RequestInterceptor;
 import com.squareup.otto.Subscribe;
-import edu.mit.mobile.android.appupdater.helpers.OkHttpHelpers;
+import com.liskovsoft.smartyoutubetv.common.okhttp.OkHttpHelpers;
 import okhttp3.Response;
 
 import java.io.InputStream;
@@ -23,7 +22,7 @@ public class VideoInfoInterceptor extends RequestInterceptor {
     public VideoInfoInterceptor(Context context) {
         mContext = context;
         mPrefs = SmartPreferences.instance(mContext);
-        mSelectedFormat = mPrefs.getSelectedFormat();
+        mSelectedFormat = VideoFormat.fromName(mPrefs.getSelectedFormat());
 
         Browser.getBus().register(this);
     }
@@ -45,7 +44,7 @@ public class VideoInfoInterceptor extends RequestInterceptor {
     }
 
     private void persistSelectedFormat() {
-        mPrefs.setSelectedFormat(mSelectedFormat);
+        mPrefs.setSelectedFormat(mSelectedFormat.toString());
     }
 
     @Override

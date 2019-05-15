@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import edu.mit.mobile.android.appupdater.helpers.Helpers;
+import com.liskovsoft.smartyoutubetv.common.helpers.Helpers;
 import edu.mit.mobile.android.appupdater.downloadmanager.MyDownloadManager;
 import edu.mit.mobile.android.appupdater.downloadmanager.MyDownloadManager.MyRequest;
 import org.json.JSONArray;
@@ -152,6 +152,15 @@ public class AppUpdateChecker {
      */
     public void forceCheckForUpdatesIfEnabled() {
         if (getEnabled()) {
+            forceCheckForUpdates();
+        }
+    }
+
+    /**
+     * Like {@link #forceCheckForUpdates} but only if prev update was long enough
+     */
+    public void forceCheckForUpdatesIfStalled() {
+        if (isStale()) {
             forceCheckForUpdates();
         }
     }

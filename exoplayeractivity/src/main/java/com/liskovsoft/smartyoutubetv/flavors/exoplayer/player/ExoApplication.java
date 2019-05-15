@@ -24,7 +24,7 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 import com.liskovsoft.browser.Browser;
-import edu.mit.mobile.android.appupdater.helpers.OkHttpHelpers;
+import com.liskovsoft.smartyoutubetv.common.okhttp.OkHttpHelpers;
 
 /**
  * Placeholder application to facilitate overriding Application methods for debugging and testing.
@@ -38,6 +38,7 @@ public class ExoApplication extends Browser {
         String appName = "ExoPlayer";
         userAgent = Util.getUserAgent(this, appName);
 
+        // A debug bridge for Android applications
         if (BuildConfig.DEBUG) {
             Stetho.initializeWithDefaults(this);
         }

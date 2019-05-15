@@ -2,7 +2,6 @@ package com.liskovsoft.smartyoutubetv.interceptors;
 
 import android.content.Context;
 import android.webkit.WebResourceResponse;
-import com.liskovsoft.smartyoutubetv.oldyoutubeinfoparser.VideoInfoInterceptor;
 
 import java.util.ArrayList;
 
@@ -14,8 +13,8 @@ public class MainRequestInterceptor extends RequestInterceptor {
         mContext = context;
         mInterceptors = new ArrayList<>();
         mInterceptors.add(new AdAwayInterceptor(context));
-        mInterceptors.add(new OpenExternalPlayerInterceptorWithState(context));
-        mInterceptors.add(new VideoInfoInterceptor(context));
+        mInterceptors.add(new ScriptManagerInterceptor(context));
+        mInterceptors.add(new OpenExternalPlayerInterceptor(context));
     }
 
     @Override
@@ -28,13 +27,22 @@ public class MainRequestInterceptor extends RequestInterceptor {
         return false;
     }
 
+    /**
+     * all interceptors are called<br/>
+     * first non-null response is the result of all intercept operation
+     */
     @Override
     public WebResourceResponse intercept(String url) {
+        WebResourceResponse result = null;
         for (RequestInterceptor interceptor : mInterceptors) {
+            // all interceptors are called
+            // first non-null response is the result of all intercept operation
             if (interceptor.test(url)){
-                return interceptor.intercept(url);
+                WebResourceResponse tmpResult = interceptor.intercept(url);
+                if (result == null)
+                    result = tmpResult;
             }
         }
-        return null;
+        return result;
     }
 }

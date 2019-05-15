@@ -1,0 +1,12 @@
+/* hide icons in the bottom-right corner (like search) */
+div#legend > div.search,
+div#legend > div.space,
+div#legend > div.delete {
+    display: none !important;
+}
+
+/* enable external keyboard (???) */
+input {
+    pointer-events: none;
+    tab-index: -1;
+}

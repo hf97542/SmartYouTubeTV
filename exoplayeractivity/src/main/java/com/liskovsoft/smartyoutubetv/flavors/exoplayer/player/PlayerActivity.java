@@ -6,9 +6,11 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.text.format.Time;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.TextView;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
@@ -18,15 +20,16 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.ui.PlaybackControlView;
 import com.google.android.exoplayer2.util.Util;
 import com.liskovsoft.exoplayeractivity.R;
+import com.liskovsoft.smartyoutubetv.common.helpers.LangUpdater;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.addons.DetailDebugViewHelper;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.addons.PlayerButtonsManager;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.addons.PlayerInitializer;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.addons.PlayerStateManager;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.dialogs.RestrictCodecDataSource;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.dialogs.GenericSelectorDialog;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.dialogs.SpeedDataSource;
 import com.liskovsoft.smartyoutubetv.flavors.exoplayer.player.displaymode.AutoFrameRateManager;
@@ -38,6 +41,7 @@ import com.liskovsoft.smartyoutubetv.flavors.exoplayer.widgets.ToggleButtonBase;
  * An activity that plays media using {@link SimpleExoPlayer}.
  */
 public class PlayerActivity extends PlayerCoreActivity implements OnClickListener, Player.EventListener, PlaybackControlView.VisibilityListener {
+    public static final int REQUEST_CODE = 123;
     private static final String TAG = PlayerActivity.class.getName();
 
     public static final String BUTTON_USER_PAGE = "button_user_page";
@@ -55,8 +59,7 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
     public static final String VIDEO_ID = "video_id";
     public static final String TRACK_ENDED = "track_ended";
     public static final String DISPLAY_MODE_ID = "display_mode_id";
-    
-    private TrackSelectionHelper trackSelectionHelper;
+
     private DetailDebugViewHelper debugViewHelper;
     
     private int interfaceVisibilityState;
@@ -68,6 +71,8 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // fix lang in case activity has been destroyed and then restored
+        setupLang();
         super.onCreate(savedInstanceState);
         // NOTE: completely disable open/close animation for activity
         overridePendingTransition(0, 0);
@@ -77,20 +82,20 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
         playerInitializer = new PlayerInitializer(this);
     }
 
+    private void setupLang() {
+        new LangUpdater(this).update();
+    }
+
     @Override
     public void initializePlayer() {
         boolean needNewPlayer = player == null;
-        if (needNewPlayer) {
-            super.initializePlayer();
+        super.initializePlayer();
 
+        if (needNewPlayer) {
             debugViewHelper = new DetailDebugViewHelper(player, debugViewGroup, PlayerActivity.this);
 
             // Do not move this code to another place!!! This statement must come after player initialization
             autoFrameRateManager = new AutoFrameRateManager(this, player);
-
-            // applied one time at player's initialization
-            //playerInitializer.applySurfaceFix(player, trackSelector);
-            //playerInitializer.applySurfaceFix(player);
 
             playerInitializer.initVideoTitle();
         }
@@ -258,6 +263,13 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
     }
 
     @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (stateManager != null)
+            stateManager.persistState(); // player about to crash
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             initializePlayer();
@@ -340,19 +352,23 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
 
     @Override
     public void onClick(View view) {
-        if (view == retryButton) {
-            initializePlayer();
-        } else if (view.getParent() == debugRootView) {
-            MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-            if (mappedTrackInfo != null) {
-                trackSelectionHelper.showSelectionDialog(
-                        this,
-                        ((TextToggleButton) view).getText(),
-                        trackSelector.getCurrentMappedTrackInfo(),
-                        (int) view.getTag()
-                );
-            }
+        super.onClick(view);
+        if (view.getId() == R.id.restrict_codec_btn) {
+            GenericSelectorDialog.create(this, new RestrictCodecDataSource(this));
         }
+    }
+
+    @Override
+    void addCustomButtonToQualitySection() {
+        addRestrictCodecButton();
+    }
+
+    private void addRestrictCodecButton() {
+        TextToggleButton button = new TextToggleButton(this);
+        button.setId(R.id.restrict_codec_btn);
+        button.setText(R.string.restrict);
+        button.setOnClickListener(this);
+        debugRootView.addView(button, debugRootView.getChildCount() - 1);
     }
 
     // PlaybackControlView.VisibilityListener implementation
@@ -364,13 +380,24 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
         playerTopBar.setVisibility(visibility);
 
         // NOTE: don't set to GONE or you will get fathom events
-        if (visibility == View.VISIBLE)
+        if (visibility == View.VISIBLE) {
             resetStateOfLayoutToggleButtons();
+            updateClockView();
+        }
+    }
+
+    private void updateClockView() {
+        TextView clock = findViewById(R.id.clock);
+        Time time = new Time();
+        time.setToNow();
+        // details about format: http://php.net/manual/en/function.strftime.php
+        String currentTime = getString(R.string.time_title, time.format("%a %e %h %R"));
+        clock.setText(currentTime);
     }
 
     private void resetStateOfLayoutToggleButtons() {
-        LayoutToggleButton toggleButton1 = (LayoutToggleButton) findViewById(R.id.player_options_btn);
-        LayoutToggleButton toggleButton2 = (LayoutToggleButton) findViewById(R.id.player_quality_btn);
+        LayoutToggleButton toggleButton1 = findViewById(R.id.player_options_btn);
+        LayoutToggleButton toggleButton2 = findViewById(R.id.player_quality_btn);
         toggleButton1.resetState();
         toggleButton2.resetState();
     }
@@ -405,7 +432,8 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
         }
 
         if (playbackState == Player.STATE_ENDED) {
-            doGracefulExit(PlayerActivity.BUTTON_NEXT); // force next track
+            // doGracefulExit(PlayerActivity.BUTTON_NEXT); // force next track
+            doGracefulExit(PlayerActivity.TRACK_ENDED);
         }
 
         if (playbackState == Player.STATE_READY) {
@@ -446,6 +474,9 @@ public class PlayerActivity extends PlayerCoreActivity implements OnClickListene
     }
 
     void retryIfNeeded() {
+        if (stateManager != null)
+            stateManager.persistState();
+
         if (needRetrySource) {
             initializePlayer();
         }

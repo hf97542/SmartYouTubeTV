@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BootstrapTextButton extends LinearLayout {
+public class BootstrapTextButton extends BootstrapButtonBase {
     private String mTitleText;
     private LinearLayout mWrapper;
     private LinearLayout mContent;
@@ -42,12 +42,12 @@ public class BootstrapTextButton extends LinearLayout {
 
         TypedArray a = context.getTheme().obtainStyledAttributes(
                 attrs,
-                R.styleable.BootstrapCheckBox,
+                R.styleable.BootstrapCheckButton,
                 0, 0);
 
         try {
-            mTitleText = a.getString(R.styleable.BootstrapCheckBox_titleText);
-            String handlerName = a.getString(R.styleable.BootstrapCheckBox_onCheckedChanged);
+            mTitleText = a.getString(R.styleable.BootstrapCheckButton_titleText);
+            String handlerName = a.getString(R.styleable.BootstrapCheckButton_onCheckedChanged);
             if (handlerName != null) {
                 setOnCheckedChangeListener(new DeclaredOnCheckedChangeListener(this, handlerName));
             }
@@ -116,7 +116,8 @@ public class BootstrapTextButton extends LinearLayout {
         });
     }
 
-    private void makeUnfocused() {
+    protected void makeUnfocused() {
+        super.makeUnfocused();
         mChkbox.setTextColor(Color.DKGRAY);
         mChkbox.setTextSize(mNormalTextSize);
         int semitransparentBlack = Color.argb(70, 0, 0, 0);
@@ -124,7 +125,8 @@ public class BootstrapTextButton extends LinearLayout {
         mWrapper.setPadding(PADDING, PADDING, PADDING, PADDING);
     }
 
-    private void makeFocused() {
+    protected void makeFocused() {
+        super.makeFocused();
         mChkbox.setTextColor(Color.BLACK);
         mChkbox.setTextSize(mZoomedTextSize);
         mContent.setBackgroundColor(Color.WHITE);
@@ -132,7 +134,7 @@ public class BootstrapTextButton extends LinearLayout {
     }
 
     private void inflate() {
-        inflate(getContext(), R.layout.bootstrap_checkbox, this);
+        inflate(getContext(), R.layout.bootstrap_check_button, this);
         mWrapper = (LinearLayout) findViewById(R.id.bootstrap_checkbox_wrapper);
         mContent = (LinearLayout) findViewById(R.id.bootstrap_checkbox_content);
         mChkbox = (CheckBox) findViewById(R.id.bootstrap_checkbox);

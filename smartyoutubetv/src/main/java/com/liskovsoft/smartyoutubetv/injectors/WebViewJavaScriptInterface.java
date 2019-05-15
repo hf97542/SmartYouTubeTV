@@ -2,19 +2,23 @@ package com.liskovsoft.smartyoutubetv.injectors;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.widget.Toast;
 import com.liskovsoft.browser.Browser;
 import com.liskovsoft.browser.Tab;
-import com.liskovsoft.smartyoutubetv.events.CSSFileInjectEvent;
-import com.liskovsoft.smartyoutubetv.events.JSFileInjectEvent;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.injectors.GenericEventResourceInjector.GenericStringResultEvent;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.injectors.GenericEventResourceInjector.GenericStringResultEventWithId;
+import com.liskovsoft.smartyoutubetv.R;
+import com.liskovsoft.smartyoutubetv.common.helpers.Helpers;
+import com.liskovsoft.smartyoutubetv.common.helpers.MessageHelpers;
+import com.liskovsoft.smartyoutubetv.events.AssetFileInjectEvent;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.events.PostDecipheredSignaturesEvent;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.injectors.GenericEventResourceInjector.GenericBooleanResultEvent;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.injectors.GenericEventResourceInjector.GenericStringResultEvent;
+import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.injectors.GenericEventResourceInjector.GenericStringResultEventWithId;
 import com.liskovsoft.smartyoutubetv.oldyoutubeinfoparser.events.SwitchResolutionEvent;
-import com.liskovsoft.smartyoutubetv.misc.Helpers;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.injectors.GenericEventResourceInjector.GenericBooleanResultEvent;
-import com.liskovsoft.smartyoutubetv.flavors.exoplayer.youtubeinfoparser.parser.events.PostDecipheredSignaturesEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +33,7 @@ public class WebViewJavaScriptInterface {
     private Context mContext;
     private final Set<Tab> mTabs = new HashSet<>();
     private static final Logger sLogger = LoggerFactory.getLogger(WebViewJavaScriptInterface.class);
+    private static final String TAG = WebViewJavaScriptInterface.class.getSimpleName();
 
     public WebViewJavaScriptInterface(Context context) {
         this(context, null);
@@ -82,6 +87,16 @@ public class WebViewJavaScriptInterface {
      */
     @JavascriptInterface
     @org.xwalk.core.JavascriptInterface
+    public String getDeviceHardware() {
+        return Build.HARDWARE;
+    }
+
+    /*
+     * This method can be called from Android. @JavascriptInterface
+     * required after SDK version 17.
+     */
+    @JavascriptInterface
+    @org.xwalk.core.JavascriptInterface
     public String getDeviceResolution() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)mContext).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -112,14 +127,11 @@ public class WebViewJavaScriptInterface {
 
     @JavascriptInterface
     @org.xwalk.core.JavascriptInterface
-    public void onJSFileInject(String fileName) {
-        Browser.getBus().post(new JSFileInjectEvent(fileName));
-
-    }
-    @JavascriptInterface
-    @org.xwalk.core.JavascriptInterface
-    public void onCSSFileInject(String fileName) {
-        Browser.getBus().post(new CSSFileInjectEvent(fileName));
+    public void onAssetFileInject(String fileName, String listenerHash) {
+        if (fileName != null) {
+            Log.d(TAG, "Posting event: " + fileName);
+            Browser.getBus().post(new AssetFileInjectEvent(fileName, listenerHash));
+        }
     }
 
     @JavascriptInterface
@@ -148,5 +160,27 @@ public class WebViewJavaScriptInterface {
     public void onGenericStringResultWithId(String result, int id) {
         sLogger.info("Received generic string result from webview.");
         Browser.getBus().post(new GenericStringResultEventWithId(result, id));
+    }
+
+    /*
+     * This method can be called from Android. @JavascriptInterface
+     * required after SDK version 17.
+     */
+    @JavascriptInterface
+    @org.xwalk.core.JavascriptInterface
+    public void showExitMsg() {
+        if (mContext instanceof Activity) {
+            MessageHelpers.showMessageThrottled(mContext, mContext.getResources().getString(R.string.exit_msg));
+        }
+    }
+
+    /*
+     * This method can be called from Android. @JavascriptInterface
+     * required after SDK version 17.
+     */
+    @JavascriptInterface
+    @org.xwalk.core.JavascriptInterface
+    public String getEngineType() {
+        return Browser.getEngineType().name();
     }
 }

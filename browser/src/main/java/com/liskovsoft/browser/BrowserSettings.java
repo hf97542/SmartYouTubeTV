@@ -9,12 +9,12 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.webkit.WebSettings;
-import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebSettings.PluginState;
 import android.webkit.WebSettings.ZoomDensity;
 import android.webkit.WebView;
 import com.liskovsoft.browser.search.SearchEngine;
 import com.liskovsoft.browser.search.SearchEngines;
+import com.liskovsoft.smartyoutubetv.common.helpers.Helpers;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -194,9 +194,9 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener, Prefer
     }
 
     public int getInitialScale() {
-        // real display size (virtual pixel == real pixel)
-        // 100 - native resolution, 50 - 2160p resolution, 0 - default
-        return mPrefs.getInt(PREF_INITIAL_SCALE, 100);
+        // 100 - normal resolution (app default), 50 - 2160p resolution, 30 - 4k resolution, 0 - android default
+        // NOTE: you may need to restart the browser in order this setting to work
+        return mPrefs.getInt(PREF_INITIAL_SCALE, 0);
     }
 
     public boolean rememberPasswords() {

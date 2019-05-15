@@ -20,8 +20,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
-import edu.mit.mobile.android.appupdater.helpers.Helpers;
-import okhttp3.Dns;
+import com.liskovsoft.smartyoutubetv.common.helpers.Helpers;
+import com.liskovsoft.smartyoutubetv.common.helpers.MessageHelpers;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -39,10 +39,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -80,7 +78,7 @@ public final class MyDownloadManager {
 
     private void run() {
         if (!isNetworkAvailable()) {
-            Helpers.showMessage(mContext, "Internet connection not available!");
+            MessageHelpers.showMessage(mContext, "Internet connection not available!");
         }
 
         String url = mRequest.mDownloadUri.toString();
@@ -159,7 +157,7 @@ public final class MyDownloadManager {
         File cacheDir = mContext.getExternalCacheDir();
         if (cacheDir == null) { // try to use SDCard
             cacheDir = Environment.getExternalStorageDirectory();
-            Helpers.showMessage(mContext,"Please, make sure that SDCard is mounted");
+            MessageHelpers.showMessage(mContext,"Please, make sure that SDCard is mounted");
         }
         File outputFile = new File(cacheDir, "tmp_file");
         return Uri.fromFile(outputFile);
